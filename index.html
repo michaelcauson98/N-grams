@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Language models in the Age of AI</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+
+<div class="page-content">
+
+<!-- Intro -->
+<h2>Language models in the Age of AI</h2>
+
+<p class="info">
+	Large Language Models (LLMs), such as ChatGPT, Gemini, Llama and Claude, have revolutionised the way in which computers process and generate language. 
+    These systems can write essays, produce code, summarise long documents, translate between languages, and engage in sustained dialogue with a level of fluency that would have seemed implausible only a decade ago. 
+</p>
+
+<p class="info">
+    However, despite their growing presence in everyday life, the basic ideas behind these systems remain unfamiliar to most people.
+    Terms like "neural networks", "tokens", and "transformers" can make the subject feel more daunting than it really is.
+    This interactive series is designed to make these ideas intuitive and accessible.
+    We begin by exploring the simplest statistical language models that have been used since the 1980s, 
+    then move to neural network-based models that ultimately evolved into the LLMs we use today.
+</p>
+
+<p class="info">
+		These demonstrations draw inspiration from the excellent book, <a href="https://web.stanford.edu/~jurafsky/slp3/" target="_blank" rel="noopener noreferrer">Speech and Language Processing</a>, by Daniel Jurafsky and James H. Martin, which provides a clear and 
+	    accessible introduction for readers wishing to explore the subject in greater depth.
+</p>
+
+
+<!-- Language as a random process -->
+<h3>Language as a random process</h3>
+
+<p class="info">
+		To understand Natural Language Processing (NLP), it is essential to set aside our preconceived notions about language and instead treat it (perhaps unromantically) as a stochastic process. 
+	    A language model, including state-of-the-art LLMs, is designed to answer one fundamental question:
+
+    <br><br>
+
+    <strong>Given the words (or, more specifically, the tokens) we have already observed, what is the most likely next token?</strong>
+    
+    <br><br>
+
+    For example, consider the following incomplete sentence:
+</p>
+
+<blockquote class="example-quote">
+    “The quick brown fox jumps over the lazy ___”
+</blockquote>
+
+<p class="info">
+	Most English speakers would confidently fill in "dog", recognising the well-known pangram.
+    
+    However, the prediction becomes far less certain in the following example:
+</p>
+
+<blockquote class="example-quote">
+    “The dog was ___”
+</blockquote>
+
+<p class="info">
+	Now the situation is different. The next token could plausibly be "big", "old", "eating", "smelly", "barking", and many others.
+    Some words, like "car" or "was", would be jarring in this context.
+
+    <br><br>
+
+    Rather than making a single guess, a language model assigns a probability to <em>every possible next token</em>. 
+	Good predictions place high probability on words that fit the context and low probability on those that do not.
+    This is the central idea: a language model learns a probability distribution over sequences of tokens.
+	Exactly how these probabilities are estimated is what distinguishes one language model from another and ultimately determines its quality.
+</p>
+
+
+<!-- Exercise -->
+<h3>Exercise: Predict the next word</h3>
+<p class="info">
+    Open your preferred messaging app on your phone (e.g., iMessage or WhatsApp).
+    Begin typing a sentence using autocomplete only - you may need to provide the first word as a prompt.
+    Allow the suggested words to guide the sentence.
+    As you do this, consider the following questions:
+</p>
+<ul class="info-list">
+    <li>Does the generated sentence make sense?</li>
+    <li>Try typing: "The quick brown fox jumps over the lazy". What does autocomplete suggest as the next word?</li>
+    <li>Compare your sentence with someone else's using the same starting prompt. Are they similar?</li>
+</ul>
+
+<p class="info">
+    Predictive text systems can generate sentences that are grammatically correct but semantically nonsensical.
+    Certainly, we would not expect to hold a conversation with a predictive text system, as we would a modern LLM.
+    Nevertheless, the underlying principle is similar: both systems estimate the probability of the next token given the preceding context.
+    
+    <br><br>
+    
+    In the context of a messaging app, this simple approach is often sufficient. 
+    Users tend to rely on common phrases and informal patterns, and they are generally tolerant of occasional errors.
+    For this limited task, a lightweight predictive model is entirely fit for purpose.
+
+    <br><br>
+    More broadly, autocompletion can have large cumulative effects on the user experience.
+    Google estimates that its search engine autocomplete feature saves its users 
+    <a href="https://blog.google/products-and-platforms/products/search/how-google-autocomplete-works-search/" target="_blank" rel="noopener noreferrer">200 years of typing every day</a>.
+</p>
+
+
+<!-- Next demo -->
+<h3>Next demonstration</h3>
+<p class="info">
+    In the <a href="Markov.html">first demonstration</a>, we explore a simple class of language models called Markov models.
+</p>
+
+</div>
+
+
+<!-- Footer navigation -->
+<footer class="site-footer" role="navigation" aria-label="Footer navigation">
+    <div class="footer-left">
+        <span class="footer-nav disabled" aria-disabled="true">◀ Back</span>
+    </div>
+    <div class="footer-right">
+        <a class="footer-nav" href="Markov.html">Next ▶</a>
+    </div>
+</footer>
+
+
+</body>
+</html>

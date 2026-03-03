@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>N-gram models</title>
+<link rel="stylesheet" href="styles.css">
+
+<!-- MathJax (SVG output) — explicit manual typeset for reliable HTML+PDF rendering -->
+<script>
+  window.MathJax = {
+    loader: { load: ['input/tex','output/svg'] },
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] },
+    startup: { typeset: true }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
+<!-- NEW: n-gram script -->
+<script src="scripts/ngram_script.js"></script>
+
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111827; }
+  .wrap { max-width: 900px; }
+  textarea { width: 100%; min-height: 140px; padding: 12px; font-size: 1rem; border: 1px solid #d1d5db; border-radius: 10px; }
+  button {padding: 12px; border: 1px; border-radius: 10px; cursor: pointer; }
+  button.primary { background: #4f46e5; color: white; }
+  .meta { margin: 14px 0; color: #374151; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border-bottom: 1px solid #e5e7eb; padding: 10px 8px; text-align: left; vertical-align: top; }
+  th { position: sticky; top: 0; background: #f9fafb; z-index: 1; }
+  code { background: #f3f4f6; padding: 2px 6px; border-radius: 6px; }
+  .controls { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .controls label { color: #374151; font-size: 0.95rem; }
+  input[type="number"] { width: 110px; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; }
+  .hint { color: #6b7280; font-size: 0.9rem; margin-top: 8px; }
+  select { width: 400px; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; }
+</style>
+</head>
+
+<body>
+<div class="page-content">
+
+<h2>N-gram language models</h2>
+
+<p class="info">
+  An <em>N-gram</em> language model generalises the Markov assumption by conditioning the next token on the previous
+  \(n-1\) tokens, approximating the true probability as follows:
+  $$P(w_i \mid w_{i-1},\dots,w_{1}) \approx P(w_i \mid w_{i-1},\dots,w_{i-n+1}).$$
+  Clearly, when $n=2$ this reduces to a bigram model in the <a href="Markov.html">previous demonstration</a>.
+  Using our frequent example, we would like to find
+  $$P(\text{dog} \mid \text{ the quick brown fox jumps over the lazy}).$$
+  The N-gram model approximates this as
+  $$\text{2-gram}: P(\text{dog} \mid \text{lazy}),$$
+  $$\text{3-gram}: P(\text{dog} \mid \text{the lazy}),$$
+  $$\text{4-gram}: P(\text{dog} \mid \text{over the lazy}),$$
+  $$\ldots$$
+</p>
+
+<p class="info">
+    Like the bigram model, we estimate these probabilities from counts in a corpus as follows:
+    $$P(w_i \mid w_{i-1},\dots,w_{i-n+1}) = \frac{\text{C}(w_{i-n+1},\dots,w_{i-1},w_i)}{\text{C}(w_{i-n+1},\dots,w_{i-1})}.$$
+    </p>
+
+<h3>N-gram table</h3>
+<p class="info">
+  Below, you can build an N-gram table from a chosen corpus (or your own text), then inspect the most frequent
+  N-grams. Note that $N-1$ start-of-sentence tokens $\langle s\rangle$ are used to pad the beginning of each sentence.
+</p>
+
+<div class="wrap">
+  <div class="controls">
+    <label>
+      Corpus:
+      <select id="corpusSelect">
+          <!-- Put your real .txt filenames here (same pattern as your bigram page) -->
+          <option value="corpus/Shakespeare.txt">The Complete Works of William Shakespeare - William Shakespeare</option>
+          <option value="corpus/Wuthering_Heights.txt">Wuthering Heights - Emily Brontë</option>
+          <option value="corpus/sherlock.txt">The Complete Works of Sherlock Holmes - Arthur Conan Doyle</option>
+          <option value="corpus/Crime_Punishment.txt">Crime and Punishment - Fyodor Dostoevsky</option>
+          <option value="corpus/Alice_Wonderland.txt">Alice in Wonderland - Lewis Carroll</option>
+          <option value="corpus/Les_Dieux_de_la_tribu.txt">Les Dieux de la tribu - Émile Zola</option>
+          <option value="custom">Build your own…</option>
+      </select>
+    </label>
+
+    <label title="n=2 gives bigrams, n=3 trigrams, etc.">
+      $N$:
+      <input id="nVal" type="number" min="2" max="6" value="3"/>
+    </label>
+
+    <label>
+      Show top:
+      <input id="topN" type="number" min="1" max="5000" value="10"/>
+      rows
+    </label>
+
+    <button class="primary" id="submitBtn">Build N-gram table</button>
+  </div>
+
+  <textarea id="textInput" placeholder="Paste text here..." rows="25" style="max-width:960px;"></textarea>
+  <div class="hint" id="hint"></div>
+
+  <div class="status" id="status"></div>
+  <div class="meta" id="meta"></div>
+  <div id="tableContainer"></div>
+</div>
+
+<h3>N-grams as a generative model</h3>
+<p class="info" style="max-width:900px; margin-top:8px; color:#374151; font-size:1rem;">
+  This demo generates text either by randomly sampling the next token from $P(w_i \mid w_{i-1},\dots,w_{i-n+1})$, 
+  or by greedily (and deterministically) selecting the most likely next token at each step.
+</p>
+
+<div class="wrap" style="margin-top:10px;">
+  <div class="controls">
+    <label>
+      Generate
+      <input id="genN" type="number" min="1" max="2000" value="40"/>
+      tokens
+    </label>
+
+    <label title="Optional: seeds generation using the last (n-1) tokens of this seed.">
+      Seed (optional)
+      <input id="seedText" type="text" placeholder="e.g. the quick brown fox" style="width:260px; padding:12px; border:1px solid #d1d5db; border-radius:10px;">
+    </label>
+
+    <label title="Stop when model produces an end-of-sentence token.">
+      <input id="stopAtEos" type="checkbox" unchecked />
+      Stop at end of sentence
+    </label>
+    <label title="Random samples from the distribution; Greedy always picks the most likely next token.">
+        Mode
+        <select id="genMode" style="padding:12px; border:1px solid #d1d5db; border-radius:10px;">
+          <option value="random" selected>Random</option>
+          <option value="greedy">Greedy</option>
+        </select>
+      </label>
+
+    <button class="primary" id="generateBtn">Generate text</button>
+    <button id="clearGenBtn">Clear</button>
+  </div>
+
+  <div class="status" id="status2" style="padding:12px;"></div>
+  <textarea id="genOutput" readonly placeholder="Generated text will appear here..." style="margin-top:10px; max-width:960px;"></textarea>
+</div>
+
+<script>
+  // ---------------- Event wiring ----------------
+  document.getElementById("corpusSelect").addEventListener("change", async () => {
+    clearOutput();
+    await loadSelectedCorpus();
+  });
+
+  document.getElementById("submitBtn").addEventListener("click", build);
+
+  document.getElementById("generateBtn").addEventListener("click", () => {
+    if (!LAST_MODEL) build();
+
+    if (!LAST_MODEL) {
+      alert("Please load a corpus and build the N-gram table first.");
+      return;
+    }
+
+    const nTokens = Math.max(1, Math.min(2000, Number(document.getElementById("genN").value) || 40));
+    document.getElementById("genN").value = nTokens;
+    const seedText = document.getElementById("seedText").value || "";
+    const stopAtEos = !!document.getElementById("stopAtEos").checked;
+    const mode = document.getElementById("genMode").value || "random";
+
+    const generated = generateFromNgrams(LAST_MODEL, nTokens, seedText, stopAtEos, mode);
+    document.getElementById("genOutput").value = generated || "(No text generated — try a different seed/corpus or a smaller n.)";
+  });
+
+  document.getElementById("clearGenBtn").addEventListener("click", () => {
+    document.getElementById("genOutput").value = "";
+  });
+
+  // Initial state: custom, empty box
+  document.getElementById("corpusSelect").value = "custom";
+  loadSelectedCorpus();
+</script>
+
+<h3>Discussion</h3>
+<p class="info">
+  The 3-gram (trigram) model captures more contextual information than the bigram model, 
+  and consequently can generate text that appears more coherent. 
+  
+  In general, as we increase $N$, the model conditions on a longer history, 
+  and the output often seems more grammatically consistent and contextually appropriate.
+  
+  However, this apparent improvement should be interpreted with caution. 
+  On closer inspection, higher-order $N$-gram models frequently reproduce long fragments of the training corpus almost verbatim. 
+</p>
+<p class="info">
+  This occurs because language is highly diverse and combinatorially rich: 
+  many longer $N$-grams (e.g., 6-grams) may occur only once in the dataset. 
+  When this happens, the model has effectively memorised that exact continuation rather than learned a generalisable pattern.
+  For example, the famous hexagram, "to be or not to be", occurs only once in Shakespeare's works, 
+  so a 6-gram model trained on that corpus would always predict "be" after "to be or not to".
+</p>
+<p class="info">
+  This is <strong>overfitting</strong>: the model has learned to predict the training data with high accuracy, 
+  but it has not learned general patterns that would allow it to generate or predict novel text.
+  To assess the true quality of an N-gram model, we would need to evaluate it on a held-out test set of unseen text.
+
+  <br><br>
+
+  A common evaluation metric is <strong>perplexity</strong>, which measures how well the model predicts a sample of text that was not used during training.
+  Roughly speaking, perplexity can be thought of as the average number of guesses the model would need to make to predict the next token in the test set,
+  with lower perplexity indicating better performance. The perplexity of a state-of-the-art trigram model in the 1990s, trained on
+  one million words, was <a href="https://en.wikipedia.org/wiki/Perplexity" target="_blank" rel="noopener noreferrer">247</a>.
+  A fantastic resource for understanding perplexity in the context of character prediction can be found <a href="https://planspace.org/perplexity/" target="_blank" rel="noopener noreferrer">here</a>.
+</p>
+
+<!-- Footer navigation (match your site pattern) -->
+<footer class="site-footer" role="navigation" aria-label="Footer navigation">
+  <div class="footer-left">
+      <a class="footer-nav" href="markov.html">◀ Back</a>
+  </div>
+  <div class="footer-right">
+        <span class="footer-nav disabled" aria-disabled="true">Next ▶</span>
+    </div>
+</footer>
+
+</div>
+</body>
+</html>
